@@ -1,11 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import { ProofState, ProofStateData } from './types'
+import { Noir } from "@noir-lang/noir_js";
+import { bytecode, abi } from "./assets/circuit.json";
+import initNoirC from "@noir-lang/noirc_abi";
+import initACVM from "@noir-lang/acvm_js";
+import acvm from "@noir-lang/acvm_js/web/acvm_js_bg.wasm?url";
+import noirc from "@noir-lang/noirc_abi/web/noirc_abi_wasm_bg.wasm?url";
 
 function App() {
   const [proofState, setProofState] = useState<ProofStateData>({
     state: ProofState.Initial
   });
+  
+  // Initialize WASM on component mount
+  useEffect(() => {
+    const initWasm = async () => {
+      try {
+        // This might have already been initialized in main.tsx,
+        // but we're adding it here as a fallback
+        if (typeof window !== 'undefined') {
+          await Promise.all([initACVM(fetch(acvm)), initNoirC(fetch(noirc))]);
+          console.log('WASM initialization in App component complete');
+        }
+      } catch (error) {
+        console.error('Failed to initialize WASM in App component:', error);
+      }
+    };
+    
+    initWasm();
+  }, []);
 
   const resetState = () => {
     setProofState({ state: ProofState.Initial });
@@ -29,6 +53,9 @@ function App() {
       const input = { x: 5, y: 10 };
       
       // Generate witness
+      let noir = new Noir({ bytecode, abi: abi as any });
+      let execResult = await noir.execute(input);
+      console.log(execResult);
       
       // Generate proof
       setProofState({ state: ProofState.GeneratingProof });

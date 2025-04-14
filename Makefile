@@ -35,5 +35,5 @@ build-contract:
 	cd contracts && scarb build
 
 artifacts:
-	cp ./circuit/target/circuit.json ./app/src/circuit/circuit.json
+	cp ./circuit/target/circuit.json ./app/src/assets/circuit.json
 	cp ./circuit/target/vk ./app/public/vk.bin
