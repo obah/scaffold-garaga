@@ -1,1 +1,2 @@
-# scaffold-garaga
+# Garaga scaffold
+
