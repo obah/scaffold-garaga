@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { ProofState, ProofStateData } from './types'
 import { Noir } from "@noir-lang/noir_js";
+import { UltraHonkBackend, reconstructHonkProof } from "@aztec/bb.js";
+import { flattenFieldsAsArray } from "./helpers/proof";
+import { getHonkCallData, parseHonkProofFromBytes, parseHonkVerifyingKeyFromBytes, init } from 'garaga';
 import { bytecode, abi } from "./assets/circuit.json";
+import vkUrl from './assets/vk.bin?url';
 import initNoirC from "@noir-lang/noirc_abi";
 import initACVM from "@noir-lang/acvm_js";
 import acvm from "@noir-lang/acvm_js/web/acvm_js_bg.wasm?url";
@@ -12,7 +16,8 @@ function App() {
   const [proofState, setProofState] = useState<ProofStateData>({
     state: ProofState.Initial
   });
-  
+  const [vk, setVk] = useState<Uint8Array | null>(null);
+
   // Initialize WASM on component mount
   useEffect(() => {
     const initWasm = async () => {
@@ -27,8 +32,17 @@ function App() {
         console.error('Failed to initialize WASM in App component:', error);
       }
     };
+
+    const loadVk = async () => {
+      const response = await fetch(vkUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      const binaryData = new Uint8Array(arrayBuffer);
+      setVk(binaryData);
+      console.log('Loaded verifying key:', binaryData);
+    };
     
     initWasm();
+    loadVk();
   }, []);
 
   const resetState = () => {
@@ -59,9 +73,25 @@ function App() {
       
       // Generate proof
       setProofState({ state: ProofState.GeneratingProof });
+
+      let honk = new UltraHonkBackend(bytecode, { threads: 1 });
+      let proof = await honk.generateProof(execResult.witness, { keccak: true });
+      honk.destroy();
+      console.log(proof);
       
       // Prepare calldata
       setProofState({ state: ProofState.PreparingCalldata });
+
+      await init();
+      const rawProof = reconstructHonkProof(flattenFieldsAsArray(proof.publicInputs), proof.proof);
+      const honkProof = parseHonkProofFromBytes(rawProof);
+      const honkVk = parseHonkVerifyingKeyFromBytes(vk as Uint8Array);
+      const callData = getHonkCallData(
+        honkProof,
+        honkVk,
+        0 // HonkFlavor.KECCAK
+      );
+      console.log(callData);
       
       // Connect wallet
       setProofState({ state: ProofState.ConnectingWallet });
