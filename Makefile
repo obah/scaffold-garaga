@@ -57,6 +57,7 @@ deploy-main:
 	# TODO: use class hash from the result of the `make declare-main` step
 	# NOTE: the public key is corresponding to the private key `1`
 	cd contracts && sncast deploy --class-hash 0x0106852bd375769e76732e01b2fb703fd6a6271579d410be023d0e4cf94f1cca --arguments 217234377348884654691879377518794323857294947151490278790710809376325639809
+	cd contracts && sncast deploy --class-hash 0x065810e6858268556a5e6ac4d2e83cf35893c044db9ebfa308ed5e5d4cb58a61
 
 artifacts:
 	cp ./circuit/target/circuit.json ./app/src/assets/circuit.json
