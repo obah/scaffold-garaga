@@ -30,12 +30,74 @@ We also need to install a tool for spawning local Starknet chain:
 make install-devnet
 ```
 
-## Guides
+## Tutorial
 
-This repo is organized in layers: every next app iteration is a new git branch.  
+This repo is organized in layers: each app iteration is a new git branch.  
 
 Follow the steps and checkout the necessary branch:
 1. [`master`](https://github.com/m-kus/scaffold-garaga/tree/master) — in-browser proof generation and stateless proof verification in devnet
-2. [`1-deploy-verifier`](https://github.com/m-kus/scaffold-garaga/tree/1-deploy-verifier) — more involved Noir logic and contract deployment guide
-3. [`2-app-state`](https://github.com/m-kus/scaffold-garaga/tree/2-app-state) — extend onchain part with a storage for nullifiers (application state)
-4. [`3-connect-wallet`](https://github.com/m-kus/scaffold-garaga/tree/3-connect-wallet) — deploy to public Starknet testnet and interact via wallet
+2. [`1-app-logic`](https://github.com/m-kus/scaffold-garaga/tree/1-app-logic) — more involved Noir circuit logic
+3. [`2-app-state`](https://github.com/m-kus/scaffold-garaga/tree/2-app-state) — extend onchain part with a storage for nullifiers
+4. [`3-testnet`](https://github.com/m-kus/scaffold-garaga/tree/3-testnet) — deploy to public Starknet testnet and interact via wallet
+
+## Run app
+
+First of all we need to build our Noir circuit:
+
+```sh
+make build-circuit
+```
+
+Sample inputs are already provided in `Prover.toml`, execute to generate witness:
+
+```sh
+make exec-circuit
+```
+
+Generate verification key:
+
+```sh
+make gen-vk
+```
+
+Now we can generate the verifier contract in Cairo using Garaga:
+
+```sh
+make gen-verifier
+```
+
+Let's start our local development network in other terminal instance:
+
+```sh
+make devnet
+```
+
+Initialize the account we will be using for deployment:
+
+```sh
+make accounts-file
+```
+
+First we need to declare out contract ("upload" contract code):
+
+```sh
+make declare-contract
+```
+
+Now we can instantiate the contract class we obtained (you might need to update the command in Makefile):
+
+```sh
+make deploy-contract
+```
+
+Great! Now let's copy necessary artifacts and update contract address in the app code (change App.tsx):
+
+```sh
+make artifacts
+```
+
+Finally we can run the app:
+
+```sh
+make run-app
+```
