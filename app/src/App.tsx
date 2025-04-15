@@ -19,6 +19,8 @@ function App() {
     state: ProofState.Initial
   });
   const [vk, setVk] = useState<Uint8Array | null>(null);
+  const [inputX, setInputX] = useState<number>(5);
+  const [inputY, setInputY] = useState<number>(10);
 
   // Initialize WASM on component mount
   useEffect(() => {
@@ -65,8 +67,8 @@ function App() {
       // Start the process
       setProofState({ state: ProofState.GeneratingWitness });
       
-      // Mock input data
-      const input = { x: 5, y: 10 };
+      // Use input values from state
+      const input = { x: inputX, y: inputY };
       
       // Generate witness
       let noir = new Noir({ bytecode, abi: abi as any });
@@ -155,6 +157,31 @@ function App() {
       <h1>Noir Proof Generation & Starknet Verification</h1>
       
       <div className="state-machine">
+        <div className="input-section">
+          <div className="input-group">
+            <label htmlFor="input-x">X:</label>
+            <input 
+              id="input-x"
+              type="number" 
+              value={inputX} 
+              onChange={(e) => setInputX(parseInt(e.target.value) || 0)} 
+              min="0"
+              disabled={proofState.state !== ProofState.Initial}
+            />
+          </div>
+          <div className="input-group">
+            <label htmlFor="input-y">Y:</label>
+            <input 
+              id="input-y"
+              type="number" 
+              value={inputY} 
+              onChange={(e) => setInputY(parseInt(e.target.value) || 0)} 
+              min="0"
+              disabled={proofState.state !== ProofState.Initial}
+            />
+          </div>
+        </div>
+        
         {renderStateIndicator(ProofState.GeneratingWitness, proofState.state, proofState.errorAt)}
         {renderStateIndicator(ProofState.GeneratingProof, proofState.state, proofState.errorAt)}
         {renderStateIndicator(ProofState.PreparingCalldata, proofState.state, proofState.errorAt)}
