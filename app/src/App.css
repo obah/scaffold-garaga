@@ -72,6 +72,7 @@ h1 {
 .state-indicator.active .state-dot {
   background-color: #1976d2;
   box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.3);
+  animation: pulsate 1s infinite;
 }
 
 .state-indicator.completed .state-dot {
@@ -208,4 +209,19 @@ button {
 
 .read-the-docs {
   color: #888;
+}
+
+@keyframes pulsate {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

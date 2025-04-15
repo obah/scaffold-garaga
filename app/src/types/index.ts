@@ -5,12 +5,10 @@ export enum ProofState {
   PreparingCalldata = 'Preparing calldata',
   ConnectingWallet = 'Connecting wallet',
   SendingTransaction = 'Sending transaction',
-  ProofVerified = 'Proof is verified',
-  Error = 'Error'
+  ProofVerified = 'Proof is verified'
 }
 
 export interface ProofStateData {
   state: ProofState;
   error?: string;
-  errorAt?: ProofState;
 }

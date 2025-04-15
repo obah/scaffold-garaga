@@ -48,7 +48,7 @@ deploy-verifier:
 
 artifacts:
 	cp ./circuit/target/circuit.json ./app/src/assets/circuit.json
-	cp ./circuit/target/vk ./app/public/vk.bin
+	cp ./circuit/target/vk ./app/src/assets/vk.bin
 	cp ./contracts/target/release/verifier_UltraKeccakHonkVerifier.contract_class.json ./app/src/assets/verifier.json
 
 run-app:

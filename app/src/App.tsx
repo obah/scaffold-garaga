@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import { ProofState, ProofStateData } from './types'
 import { Noir } from "@noir-lang/noir_js";
@@ -21,6 +21,8 @@ function App() {
   const [vk, setVk] = useState<Uint8Array | null>(null);
   const [inputX, setInputX] = useState<number>(5);
   const [inputY, setInputY] = useState<number>(10);
+  // Use a ref to reliably track the current state across asynchronous operations
+  const currentStateRef = useRef<ProofState>(ProofState.Initial);
 
   // Initialize WASM on component mount
   useEffect(() => {
@@ -50,22 +52,46 @@ function App() {
   }, []);
 
   const resetState = () => {
-    setProofState({ state: ProofState.Initial });
+    currentStateRef.current = ProofState.Initial;
+    setProofState({ 
+      state: ProofState.Initial,
+      error: undefined 
+    });
   };
 
-  const handleError = (error: unknown, errorAt: ProofState) => {
+  const handleError = (error: unknown) => {
     console.error('Error:', error);
+    let errorMessage: string;
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (error !== null && error !== undefined) {
+      // Try to convert any non-Error object to a string
+      try {
+        errorMessage = String(error);
+      } catch {
+        errorMessage = 'Unknown error (non-stringifiable object)';
+      }
+    } else {
+      errorMessage = 'Unknown error occurred';
+    }
+    
+    // Use the ref to get the most recent state
     setProofState({
-      state: ProofState.Error,
-      error: error instanceof Error ? error.message : 'An unknown error occurred',
-      errorAt
+      state: currentStateRef.current,
+      error: errorMessage
     });
+  };
+
+  const updateState = (newState: ProofState) => {
+    currentStateRef.current = newState;
+    setProofState({ state: newState, error: undefined });
   };
 
   const startProcess = async () => {
     try {
       // Start the process
-      setProofState({ state: ProofState.GeneratingWitness });
+      updateState(ProofState.GeneratingWitness);
       
       // Use input values from state
       const input = { x: inputX, y: inputY };
@@ -76,7 +102,7 @@ function App() {
       console.log(execResult);
       
       // Generate proof
-      setProofState({ state: ProofState.GeneratingProof });
+      updateState(ProofState.GeneratingProof);
 
       let honk = new UltraHonkBackend(bytecode, { threads: 2 });
       let proof = await honk.generateProof(execResult.witness, { keccak: true });
@@ -84,7 +110,7 @@ function App() {
       console.log(proof);
       
       // Prepare calldata
-      setProofState({ state: ProofState.PreparingCalldata });
+      updateState(ProofState.PreparingCalldata);
 
       await init();
       const rawProof = reconstructHonkProof(flattenFieldsAsArray(proof.publicInputs), proof.proof);
@@ -98,10 +124,10 @@ function App() {
       console.log(callData);
       
       // Connect wallet
-      setProofState({ state: ProofState.ConnectingWallet });
+      updateState(ProofState.ConnectingWallet);
 
       // Send transaction
-      setProofState({ state: ProofState.SendingTransaction });
+      updateState(ProofState.SendingTransaction);
 
       const provider = new RpcProvider({ nodeUrl: 'http://127.0.0.1:5050/rpc' });
       const contractAddress = '0x05786c8e655a4b1ec5ad541ff167d1cd164198e56bbf7f0fc9b9c2cde9324efc';
@@ -111,22 +137,25 @@ function App() {
       const res = await verifierContract.verify_ultra_keccak_honk_proof(callData.slice(1));
       console.log(res);
 
-      setProofState({ state: ProofState.ProofVerified });
+      updateState(ProofState.ProofVerified);
     } catch (error) {
-      handleError(error, proofState.state);
+      handleError(error);
     }
   };
 
-  const renderStateIndicator = (state: ProofState, current: ProofState, errorAt?: ProofState) => {
+  const renderStateIndicator = (state: ProofState, current: ProofState) => {
     let status = 'pending';
     
-    if (current === ProofState.Error && errorAt === state) {
+    // If this stage is current with an error, show error state
+    if (current === state && proofState.error) {
       status = 'error';
-    } else if (current === state) {
+    } 
+    // If this is the current stage, show active state
+    else if (current === state) {
       status = 'active';
-    } else if (current === ProofState.Error && getStateIndex(errorAt || ProofState.Initial) < getStateIndex(state)) {
-      status = 'pending';
-    } else if (getStateIndex(current) > getStateIndex(state)) {
+    } 
+    // If we're past this stage, mark it completed
+    else if (getStateIndex(current) > getStateIndex(state)) {
       status = 'completed';
     }
     
@@ -162,10 +191,12 @@ function App() {
             <label htmlFor="input-x">X:</label>
             <input 
               id="input-x"
-              type="number" 
+              type="text" 
               value={inputX} 
-              onChange={(e) => setInputX(parseInt(e.target.value) || 0)} 
-              min="0"
+              onChange={(e) => {
+                const value = parseInt(e.target.value);
+                setInputX(isNaN(value) ? 0 : value);
+              }} 
               disabled={proofState.state !== ProofState.Initial}
             />
           </div>
@@ -173,34 +204,36 @@ function App() {
             <label htmlFor="input-y">Y:</label>
             <input 
               id="input-y"
-              type="number" 
+              type="text" 
               value={inputY} 
-              onChange={(e) => setInputY(parseInt(e.target.value) || 0)} 
-              min="0"
+              onChange={(e) => {
+                const value = parseInt(e.target.value);
+                setInputY(isNaN(value) ? 0 : value);
+              }} 
               disabled={proofState.state !== ProofState.Initial}
             />
           </div>
         </div>
         
-        {renderStateIndicator(ProofState.GeneratingWitness, proofState.state, proofState.errorAt)}
-        {renderStateIndicator(ProofState.GeneratingProof, proofState.state, proofState.errorAt)}
-        {renderStateIndicator(ProofState.PreparingCalldata, proofState.state, proofState.errorAt)}
-        {renderStateIndicator(ProofState.ConnectingWallet, proofState.state, proofState.errorAt)}
-        {renderStateIndicator(ProofState.SendingTransaction, proofState.state, proofState.errorAt)}
+        {renderStateIndicator(ProofState.GeneratingWitness, proofState.state)}
+        {renderStateIndicator(ProofState.GeneratingProof, proofState.state)}
+        {renderStateIndicator(ProofState.PreparingCalldata, proofState.state)}
+        {renderStateIndicator(ProofState.ConnectingWallet, proofState.state)}
+        {renderStateIndicator(ProofState.SendingTransaction, proofState.state)}
       </div>
       
       {proofState.error && (
         <div className="error-message">
-          Error at stage '{proofState.errorAt}': {proofState.error}
+          Error at stage '{proofState.state}': {proofState.error}
         </div>
       )}
       
       <div className="controls">
-        {proofState.state === ProofState.Initial && (
+        {proofState.state === ProofState.Initial && !proofState.error && (
           <button className="primary-button" onClick={startProcess}>Start</button>
         )}
         
-        {(proofState.state === ProofState.Error || proofState.state === ProofState.ProofVerified) && (
+        {(proofState.error || proofState.state === ProofState.ProofVerified) && (
           <button className="reset-button" onClick={resetState}>Reset</button>
         )}
       </div>
