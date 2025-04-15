@@ -6,8 +6,9 @@ import { UltraHonkBackend, reconstructHonkProof } from "@aztec/bb.js";
 import { flattenFieldsAsArray } from "./helpers/proof";
 import { getHonkCallData, parseHonkProofFromBytes, parseHonkVerifyingKeyFromBytes, init } from 'garaga';
 import { bytecode, abi } from "./assets/circuit.json";
+import { abi as verifierAbi } from "./assets/verifier.json";
 import vkUrl from './assets/vk.bin?url';
-import { Account, RpcProvider } from 'starknet';
+import { RpcProvider, Contract } from 'starknet';
 import initNoirC from "@noir-lang/noirc_abi";
 import initACVM from "@noir-lang/acvm_js";
 import acvm from "@noir-lang/acvm_js/web/acvm_js_bg.wasm?url";
@@ -75,7 +76,7 @@ function App() {
       // Generate proof
       setProofState({ state: ProofState.GeneratingProof });
 
-      let honk = new UltraHonkBackend(bytecode, { threads: 1 });
+      let honk = new UltraHonkBackend(bytecode, { threads: 2 });
       let proof = await honk.generateProof(execResult.witness, { keccak: true });
       honk.destroy();
       console.log(proof);
@@ -97,27 +98,18 @@ function App() {
       // Connect wallet
       setProofState({ state: ProofState.ConnectingWallet });
 
-      const provider = new RpcProvider({ nodeUrl: 'http://127.0.0.1:5050/rpc' });
-      // initialize existing pre-deployed account 0 of Devnet
-      const privateKey = '0x71d7bb07b9a64f6f78ac4c816aff4da9';
-      const accountAddress = '0x64b48806902a367c8598f4f95c305e8c1a1acba5f082d294a43793113115691';
-
-      const account = new Account(provider, accountAddress, privateKey);
-      console.log(account);
-
       // Send transaction
       setProofState({ state: ProofState.SendingTransaction });
 
-      
+      const provider = new RpcProvider({ nodeUrl: 'http://127.0.0.1:5050/rpc' });
+      const contractAddress = '0x05786c8e655a4b1ec5ad541ff167d1cd164198e56bbf7f0fc9b9c2cde9324efc';
+      const verifierContract = new Contract(verifierAbi, contractAddress, provider);
       
       // Check verification
-      const verified = true;
-      
-      if (verified) {
-        setProofState({ state: ProofState.ProofVerified });
-      } else {
-        throw new Error('Proof verification failed');
-      }
+      const res = await verifierContract.verify_ultra_keccak_honk_proof(callData.slice(1));
+      console.log(res);
+
+      setProofState({ state: ProofState.ProofVerified });
     } catch (error) {
       handleError(error, proofState.state);
     }

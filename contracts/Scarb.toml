@@ -1,7 +1,2 @@
 [workspace]
 members = ["verifier"]
-
-[sncast.devnet]
-url = "http://localhost:5050/rpc"
-accounts-file = "accounts.json"
-account = "demo"

@@ -1,3 +1,6 @@
+install-bun:
+	curl -fsSL https://bun.sh/install | bash
+
 install-noir:
 	curl -L https://raw.githubusercontent.com/noir-lang/noirup/refs/heads/main/install | bash
 	noirup --version 1.0.0-beta.2
@@ -16,6 +19,9 @@ install-devnet:
 devnet:
 	starknet-devnet --accounts=2 --seed=0 --initial-balance=100000000000000000000000
 
+accounts-file:
+	curl -s http://localhost:5050/predeployed_accounts | jq '{"alpha-sepolia": {"devnet0": {address: .[0].address, private_key: .[0].private_key, public_key: .[0].public_key, class_hash: "0xe2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6", deployed: true, legacy: false, salt: "0x14", type: "open_zeppelin"}}}' > ./contracts/accounts.json
+
 build-circuit:
 	cd circuit && nargo build
 
@@ -28,18 +34,22 @@ prove-circuit:
 gen-vk:
 	bb write_vk --scheme ultra_honk --oracle_hash keccak -b ./circuit/target/circuit.json -o ./circuit/target
 
-gen-contract:
+gen-verifier:
 	cd contracts && garaga gen --system ultra_keccak_honk --vk ../circuit/target/vk --project-name verifier
 
-build-contract:
+build-verifier:
 	cd contracts/verifier && scarb build
 
-declare-contract:
+declare-verifier:
 	cd contracts && sncast declare --contract-name UltraKeccakHonkVerifier
+
+deploy-verifier:
+	cd contracts && sncast deploy --class-hash 0x0209f77b619e9861001398617b39a0a652e6bf3d874036448e108794a87e3641
 
 artifacts:
 	cp ./circuit/target/circuit.json ./app/src/assets/circuit.json
 	cp ./circuit/target/vk ./app/public/vk.bin
+	cp ./contracts/target/release/verifier_UltraKeccakHonkVerifier.contract_class.json ./app/src/assets/verifier.json
 
-accounts-file:
-	curl -s http://localhost:5050/predeployed_accounts | jq '{"alpha-sepolia": {"devnet0": {address: .[0].address, private_key: .[0].private_key, public_key: .[0].public_key, class_hash: "0xe2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6", deployed: true, legacy: false, salt: "0x14", type: "open_zeppelin"}}}' > ./contracts/accounts.json
+run-app:
+	cd app && bun run dev
