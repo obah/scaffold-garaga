@@ -10,12 +10,8 @@ mod MainContract {
     };
     use starknet::{syscalls, SyscallResultTrait};
 
-<<<<<<< HEAD
     // TODO: use class hash from the result of the `make declare-verifier` step
     const VERIFIER_CLASSHASH: felt252 = 0x00bb20462f9741231dca2052a0d4b15d1c7c91b3ba0df91cb264e4f9fd5e80cc;
-=======
-    const VERIFIER_CLASSHASH: felt252 = 0x065810e6858268556a5e6ac4d2e83cf35893c044db9ebfa308ed5e5d4cb58a61;
->>>>>>> 3ff862d (Add new contract with state)
 
     #[storage]
     struct Storage {
