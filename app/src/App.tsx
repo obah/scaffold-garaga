@@ -147,7 +147,11 @@ function App() {
       // Send transaction
       updateState(ProofState.SendingTransaction);
 
+<<<<<<< HEAD
       const contractAddress = '0x02f00c35153f2dd515d032e882b0acf0302862ec35d9ff0393bb3966ac30c835';
+=======
+      const contractAddress = '0x0670f5b5c83aa741ab6186b7ac94cbb5d60ff6e3d7e6534e4205e7a977ca6e94';
+>>>>>>> 3ff862d (Add new contract with state)
       const mainContract = new Contract(mainAbi, contractAddress, provider);
 
       mainContract.connect(account);
