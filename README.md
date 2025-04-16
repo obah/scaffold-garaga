@@ -30,6 +30,14 @@ We also need to install a tool for spawning local Starknet chain:
 make install-devnet
 ```
 
+Finally we need to install Garaga, make sure you have Python 3.10 in your system:
+
+```sh
+make install-garaga
+```
+
+Note that we need specific versions of Noir, Barretenberg, and Garaga to work well together. If you are experiencing any issues with code generation, proving, and verification — first of all ensure you have the correct package versions.
+
 ## Tutorial
 
 This repo is organized in layers: each app iteration is a new git branch.  

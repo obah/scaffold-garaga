@@ -16,6 +16,9 @@ install-devnet:
 	asdf plugin add starknet-devnet
 	asdf install starknet-devnet 0.3.0
 
+install-garaga:
+	pip install garaga==0.16.0
+
 devnet:
 	starknet-devnet --accounts=2 --seed=0 --initial-balance=100000000000000000000000
 
