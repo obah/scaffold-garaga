@@ -101,3 +101,12 @@ Finally we can run the app:
 ```sh
 make run-app
 ```
+
+## Useful links
+
+- Noir quickstart https://noir-lang.org/docs/getting_started/quick_start
+- Garaga docs https://garaga.gitbook.io/garaga/deploy-your-snark-verifier-on-starknet/noir
+- Starknet.js docs https://starknetjs.com/docs/guides/intro
+- Starknet quickstart https://docs.starknet.io/quick-start/overview/
+- Sncast 101 https://foundry-rs.github.io/starknet-foundry/starknet/101.html
+- Cairo book https://book.cairo-lang.org/
