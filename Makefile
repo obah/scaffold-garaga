@@ -3,11 +3,11 @@ install-bun:
 
 install-noir:
 	curl -L https://raw.githubusercontent.com/noir-lang/noirup/refs/heads/main/install | bash
-	noirup --version 1.0.0-beta.2
+	noirup --version 1.0.0-beta.3
 
 install-barretenberg:
 	curl -L https://raw.githubusercontent.com/AztecProtocol/aztec-packages/refs/heads/master/barretenberg/bbup/install | bash
-	bbup --version 0.82.2
+	bbup --version 0.85.0
 
 install-starknet:
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.starkup.dev | sh
@@ -17,7 +17,7 @@ install-devnet:
 	asdf install starknet-devnet 0.3.0
 
 install-garaga:
-	pip install garaga==0.16.0
+	pip install garaga==0.17.0
 
 devnet:
 	starknet-devnet --accounts=2 --seed=0 --initial-balance=100000000000000000000000
@@ -47,7 +47,8 @@ declare-verifier:
 	cd contracts && sncast declare --contract-name UltraKeccakHonkVerifier
 
 deploy-verifier:
-	cd contracts && sncast deploy --class-hash 0x0209f77b619e9861001398617b39a0a652e6bf3d874036448e108794a87e3641
+	# TODO: use class hash from the result of the `make declare-verifier` step
+	cd contracts && sncast deploy --class-hash 0x0424716f07755df45e1988daec1266fe752946785cc8824d2c00e0eb070d551d
 
 artifacts:
 	cp ./circuit/target/circuit.json ./app/src/assets/circuit.json

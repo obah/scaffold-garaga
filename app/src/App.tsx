@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import { ProofState, ProofStateData } from './types'
 import { Noir } from "@noir-lang/noir_js";
-import { UltraHonkBackend, reconstructHonkProof } from "@aztec/bb.js";
+import { UltraHonkBackend } from "@aztec/bb.js";
 import { flattenFieldsAsArray } from "./helpers/proof";
-import { getHonkCallData, parseHonkProofFromBytes, parseHonkVerifyingKeyFromBytes, init } from 'garaga';
+import { getHonkCallData, init } from 'garaga';
 import { bytecode, abi } from "./assets/circuit.json";
 import { abi as verifierAbi } from "./assets/verifier.json";
 import vkUrl from './assets/vk.bin?url';
@@ -113,12 +113,10 @@ function App() {
       updateState(ProofState.PreparingCalldata);
 
       await init();
-      const rawProof = reconstructHonkProof(flattenFieldsAsArray(proof.publicInputs), proof.proof);
-      const honkProof = parseHonkProofFromBytes(rawProof);
-      const honkVk = parseHonkVerifyingKeyFromBytes(vk as Uint8Array);
       const callData = getHonkCallData(
-        honkProof,
-        honkVk,
+        proof.proof,
+        flattenFieldsAsArray(proof.publicInputs),
+        vk as Uint8Array,
         0 // HonkFlavor.KECCAK
       );
       console.log(callData);
@@ -130,7 +128,8 @@ function App() {
       updateState(ProofState.SendingTransaction);
 
       const provider = new RpcProvider({ nodeUrl: 'http://127.0.0.1:5050/rpc' });
-      const contractAddress = '0x05786c8e655a4b1ec5ad541ff167d1cd164198e56bbf7f0fc9b9c2cde9324efc';
+      // TODO: use conract address from the result of the `make deploy-verifier` step
+      const contractAddress = '0x0571403cd12c79c3563eddff3f50cdf4ae10f8f31dc4756545a1812171da53a0';
       const verifierContract = new Contract(verifierAbi, contractAddress, provider);
       
       // Check verification
